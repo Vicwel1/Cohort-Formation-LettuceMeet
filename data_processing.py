@@ -14,6 +14,7 @@ def extract_participant_availabilities(data, time_block, skip_list=[]):
     pollStartTime = data['data']['event']['pollStartTime']
     pollEndTime = data['data']['event']['pollEndTime']
     pollDates = data['data']['event']['pollDates']
+
     for date in pollDates:
         possible_times.append((datetime.strptime(date + "T" + pollStartTime, "%Y-%m-%dT%H:%M:%S.%fZ"), datetime.strptime(date + "T" + pollEndTime, "%Y-%m-%dT%H:%M:%S.%fZ")))
 
@@ -48,6 +49,8 @@ def extract_facilitator_availabilities(data, names=False):
 
     facilitators_availabilities = {}
     facilitator_names = []
+    # for date in data['data']['event']['pollDates']:
+
 
     # Iterate through each response and extract facilitator availabilities
     for response in data['data']['event']['pollResponses']:
@@ -230,3 +233,23 @@ def process_data(file_path, num_cohorts, min_size, max_size, time_block, facilit
 
     except Exception as e:
         raise e
+    
+
+
+if __name__ == "__main__":
+    file_path = "Cohort-Formation-LettuceMeet/anonymized_file.json"
+    num_cohorts = 4
+    min_size = 3
+    max_size = 6 
+    time_block = 1.5
+    facilitator_file_path = "Cohort-Formation-LettuceMeet/facilitator_test.json"
+    with open(facilitator_file_path, 'r') as file:
+            facilitator_data = json.load(file)
+    facilitator_names = extract_facilitator_availabilities(facilitator_data, names=True) 
+    print(facilitator_names)
+    facilitator_capacity_entries = {}
+    for name in facilitator_names:
+        facilitator_capacity_entries[name] = 1
+
+    data = process_data(file_path, num_cohorts, min_size, max_size, time_block, facilitator_file_path, facilitator_capacity_entries)
+    print(data)
