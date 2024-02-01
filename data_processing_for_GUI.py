@@ -45,29 +45,57 @@ def extract_participant_availabilities(data, time_block, skip_list=[]):
     return participants_availabilities, possible_times, not_available
 
 
-def extract_facilitator_availabilities(data, names=False):
+def match_dates(facilitator_data, participant_data):
+    """
+    Match the dates of the facilitator and participant data. This is done so that the facilitator and participant availabilities can be compared, 
+    even if the facilitator and participant poll dates are different.
+    Returns a dictionary mapping facilitator dates to participant dates.
+    """
+    date_mapping = {}
+    pollDates_facilitator = facilitator_data['data']['event']['pollDates']
+    pollDates_participant = participant_data['data']['event']['pollDates']
+    weekdays_participant = [datetime.strptime(date, "%Y-%m-%d").weekday() for date in pollDates_participant]
+    for date in pollDates_facilitator:
+        weekday = datetime.strptime(date, "%Y-%m-%d").weekday()
+        index = weekdays_participant.index(weekday)
+        date_mapping[date] = pollDates_participant[index]
+    
+    return date_mapping
+
+
+def extract_facilitator_availabilities(facilitator_data, participant_data, only_names=False):
     """Extract facilitator availabilities from the data"""
 
-    facilitators_availabilities = {}
-    facilitator_names = []
-    # for date in data['data']['event']['pollDates']:
+    # If only_names is True, return a list of facilitator names
+    if only_names:
+        facilitator_names = []
+        for response in facilitator_data['data']['event']['pollResponses']:
+            facilitator_name = response['user']['name']
+            facilitator_names.append(facilitator_name)
+        return facilitator_names
+    else:
+        facilitators_availabilities = {}
+        date_mapping = match_dates(facilitator_data, participant_data)
 
+        # Iterate through each response and extract facilitator availabilities
+        for response in facilitator_data['data']['event']['pollResponses']:
+            facilitator_name = response['user']['name']
+            time_slots = []
+            for availability in response['availabilities']:
+                # Convert availability times to datetime objects
+                start = datetime.strptime(availability['start'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                end = datetime.strptime(availability['end'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                # convert the date to the participant date
+                start_date = datetime.strptime(date_mapping[str(start.date())], "%Y-%m-%d")
+                end_date = datetime.strptime(date_mapping[str(end.date())], "%Y-%m-%d")
 
-    # Iterate through each response and extract facilitator availabilities
-    for response in data['data']['event']['pollResponses']:
-        applicant_name = response['user']['name']
-        time_slots = [
-            (
-                datetime.strptime(availability['start'], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                datetime.strptime(availability['end'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            )
-            for availability in response['availabilities']
-        ]
-        facilitators_availabilities[applicant_name] = time_slots
-        facilitator_names.append(applicant_name)
+                start = start.replace(year=start_date.year, month=start_date.month, day=start_date.day)
+                end = end.replace(year=end_date.year, month=end_date.month, day=end_date.day)
+                time_slots.append((start, end))
+                
+            facilitators_availabilities[facilitator_name] = time_slots
 
-    # Return either names or availabilities based on the 'names' flag
-    return facilitator_names if names else facilitators_availabilities
+        return facilitators_availabilities
 
 
 def find_all_possible_cohorts(participants_availabilities, facilitators_availabilities, min_cohort_size, max_cohort_size, time_block, possible_times):
@@ -205,19 +233,19 @@ def process_data(file_path, num_cohorts, min_size, max_size, time_block, facilit
     try:
         # Load participant data from JSON file
         with open(file_path, 'r') as file:
-            data = json.load(file)
+            participant_data = json.load(file)
 
         # Load facilitator data from JSON file
         with open(facilitator_file_path, 'r') as file:
             facilitator_data = json.load(file)
 
-        facilitators_availabilities = extract_facilitator_availabilities(facilitator_data)
+        facilitators_availabilities = extract_facilitator_availabilities(facilitator_data, participant_data)
 
         # Construct a dictionary of facilitators' info (availabilities and capacities)
         facilitators_info = {name: (facilitators_availabilities[name], int(facilitator_capacity_entries[name].get())) for name in facilitators_availabilities}
         
         # Extract participant availabilities and possible times for the event
-        availabilities, possible_times, not_available = extract_participant_availabilities(data, time_block)
+        availabilities, possible_times, not_available = extract_participant_availabilities(participant_data, time_block)
         
         # Find all possible cohorts based on availabilities and constraints
         all_cohorts = find_all_possible_cohorts(availabilities, facilitators_info, min_size, max_size, time_block, possible_times)

@@ -41,7 +41,7 @@ def display_facilitator_capacity_inputs():
     try:
         with open(facilitator_file_path, 'r') as file:
             data = json.load(file)
-        facilitator_names = data_processing.extract_facilitator_availabilities(data, names=True)
+        facilitator_names = data_processing.extract_facilitator_availabilities(data, [], only_names=True)
         for widget in facilitator_frame.winfo_children():
             widget.destroy()
         for name in facilitator_names:
