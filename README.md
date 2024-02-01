@@ -11,11 +11,9 @@ For Safari on Mac
 2. Click on “Develop” in the menu bar, then select “Show Web Inspector”. (If you don't see “Develop”, follow [these instructions](https://support.apple.com/en-il/guide/safari/sfri20948/mac).
 3. In the Web Inspector, navigate to the “Network” tab.
 4. Look for entries named “graphql” under “Names”. You might need to refresh the page to see the correct entry. The one you're looking for should match the format shown below:
+![plot](graphqlLettuceMeet.jpg)
 
-<p align="center">
-  <img src="LettuceMeetgraphql.pdf" width="400" title="Format of the graphql to locate">
-</p>
-5. Copy the full contents, and paste it in a .json file, in the same directory as you will run the python script.
+5. Copy the full contents, and paste it in a .json file, in the same directory as you will run the python script. To see how the .json file should look, see [this](anonymized_file.json) anonymized file from AI Safety Gothenburgs applications last fall.
 
 ## Generating cohorts
 
