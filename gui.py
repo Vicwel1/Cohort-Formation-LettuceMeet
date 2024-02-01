@@ -1,6 +1,8 @@
+# This file contains the code for the GUI of the Cohort Formation Tool. Simply run this file to start the GUI. You do not need to modify this file.
+
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
-import data_processing
+import data_processing_for_GUI as data_processing
 import json
 import os
 

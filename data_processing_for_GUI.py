@@ -1,7 +1,8 @@
+# This is the file that is called by the GUI to process the data and form the cohorts. You do not need to modify or run this file.
+
 import json
 from datetime import datetime, timedelta
 from itertools import combinations
-
 
 
 def extract_participant_availabilities(data, time_block, skip_list=[]):

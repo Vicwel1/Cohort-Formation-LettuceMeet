@@ -4,7 +4,7 @@ from itertools import combinations
 
 
 
-def extract_participant_availabilities(data, time_block, alignment_applicants, governance_applicants, skip_list=[]):
+def extract_participant_availabilities(data, time_block, alignment_applicants, governance_applicants, filter_by_course):
     """Extract time availabilities for each applicant."""
     alignment_availability = {}
     governance_availability = {}
@@ -24,9 +24,6 @@ def extract_participant_availabilities(data, time_block, alignment_applicants, g
     # Iterate through each response and extract time slots
     for response in data['data']['event']['pollResponses']:
         applicant_name = response['user']['name']
-        if applicant_name in skip_list:
-            print(f'Skipping {applicant_name}')
-            continue
 
         # Convert availability times to datetime objects
         time_slots = [
@@ -37,20 +34,25 @@ def extract_participant_availabilities(data, time_block, alignment_applicants, g
             for availability in response['availabilities']
         ]
 
-        # Check if the participant is available for the required time block
+
         if not any(e-s >= timedelta(hours=time_block) for s, e in time_slots):
             not_available.append(applicant_name)
             continue
-        
-        if applicant_name in alignment_applicants:
-            alignment_availability[applicant_name] = time_slots
-        elif applicant_name in governance_applicants:
-            governance_availability[applicant_name] = time_slots
-        else:
-            misc_availabilities[applicant_name] = time_slots
-        # participants_availabilities[applicant_name] = time_slots
 
-    return [alignment_availability, governance_availability, misc_availabilities], possible_times, not_available
+        if filter_by_course:
+            if applicant_name in alignment_applicants:
+                alignment_availability[applicant_name] = time_slots
+            elif applicant_name in governance_applicants:
+                governance_availability[applicant_name] = time_slots
+            else:
+                misc_availabilities[applicant_name] = time_slots
+        else:
+            participants_availabilities[applicant_name] = time_slots
+
+    if filter_by_course:
+        return [alignment_availability, governance_availability, misc_availabilities], possible_times, not_available
+    else:
+        return participants_availabilities, possible_times, not_available
 
 
 def extract_facilitator_availabilities(data, names=False):
@@ -272,11 +274,12 @@ def process_data(params):
     - facilitator_capacity_course_entries: dictionary containing the facilitator's capacity and course
     - alignment_applicants: list of applicants who applied for alignment
     - governance_applicants: list of applicants who applied for governance
+    - filter_by_course: boolean indicating whether to filter by course or not
 
     """
 
     try:
-        file_path = params["file_path"]
+        participant_file_path = params["participant_file_path"]
         num_align_cohorts = params["num_align_cohorts"]
         num_gov_cohorts = params["num_gov_cohorts"]
         num_total_cohorts = params["num_total_cohorts"]
@@ -287,10 +290,11 @@ def process_data(params):
         facilitator_capacity_course_entries = params["facilitator_capacity_course_entries"]
         alignment_applicants = params["alignment_applicants"]
         governance_applicants = params["governance_applicants"]
+        filter_by_course = params["filter_by_course"]
 
         # Load participant data from JSON file
-        with open(file_path, 'r') as file:
-            data = json.load(file)
+        with open(participant_file_path, 'r') as file:
+            participant_data = json.load(file)
 
         # Load facilitator data from JSON file
         with open(facilitator_file_path, 'r') as file:
@@ -298,51 +302,46 @@ def process_data(params):
 
         facilitators_availabilities = extract_facilitator_availabilities(facilitator_data)
 
-        # Construct a dictionary of facilitators' info (availabilities and capacities)
-
         
         facilitators_info = {name: [facilitators_availabilities[name], int(facilitator_capacity_course_entries[name][0]), facilitator_capacity_course_entries[name][1]] for name in facilitators_availabilities}
         
-        align_facilitators_info = {name: [facilitators_availabilities[name], int(facilitator_capacity_course_entries[name][0])] for name in facilitators_availabilities if facilitator_capacity_course_entries[name][1] == "align"}
-        
-        gov_facilitators_info = {name: [facilitators_availabilities[name], int(facilitator_capacity_course_entries[name][0])] for name in facilitators_availabilities if facilitator_capacity_course_entries[name][1] == "gov"}
-
-
         # Extract participant availabilities and possible times for the event
-        availabilities, possible_times, not_available = extract_participant_availabilities(data, time_block, alignment_applicants, governance_applicants)
+        availabilities, possible_times, not_available = extract_participant_availabilities(participant_data, time_block, alignment_applicants, governance_applicants, filter_by_course)
 
-        alignment_availability = availabilities[0]
-        governance_availability = availabilities[1]
-        misc_availabilities = availabilities[2]
+        if filter_by_course:
+            align_facilitators_info = {name: [facilitators_availabilities[name], int(facilitator_capacity_course_entries[name][0])] for name in facilitators_availabilities if facilitator_capacity_course_entries[name][1] == "align"}
+            gov_facilitators_info = {name: [facilitators_availabilities[name], int(facilitator_capacity_course_entries[name][0])] for name in facilitators_availabilities if facilitator_capacity_course_entries[name][1] == "gov"}
 
+            alignment_availability = availabilities[0]
+            governance_availability = availabilities[1]
+            misc_availabilities = availabilities[2]
 
-        # Find all possible cohorts based on availabilities and constraints
-        if alignment_availability:
-            all_align_cohorts = find_all_possible_cohorts(alignment_availability, align_facilitators_info, min_size, max_size, time_block, possible_times)
-            best_align_cohorts = select_best_cohorts(all_align_cohorts, num_align_cohorts, min_size, align_facilitators_info)
-            not_selected_align = set(alignment_availability.keys()) - set([name for cohort in best_align_cohorts for name in cohort[2]])
+            if alignment_availability:
+                all_align_cohorts = find_all_possible_cohorts(alignment_availability, align_facilitators_info, min_size, max_size, time_block, possible_times)
+                best_align_cohorts = select_best_cohorts(all_align_cohorts, num_align_cohorts, min_size, align_facilitators_info)
+                not_selected_align = set(alignment_availability.keys()) - set([name for cohort in best_align_cohorts for name in cohort[2]])
 
-        if governance_availability:
-            all_gov_cohorts = find_all_possible_cohorts(governance_availability, gov_facilitators_info, min_size, max_size, time_block, possible_times)
-            best_gov_cohorts = select_best_cohorts(all_gov_cohorts, num_gov_cohorts, min_size, gov_facilitators_info)
-            not_selected_gov = set(governance_availability.keys()) - set([name for cohort in best_gov_cohorts for name in cohort[2]])
+            if governance_availability:
+                all_gov_cohorts = find_all_possible_cohorts(governance_availability, gov_facilitators_info, min_size, max_size, time_block, possible_times)
+                best_gov_cohorts = select_best_cohorts(all_gov_cohorts, num_gov_cohorts, min_size, gov_facilitators_info)
+                not_selected_gov = set(governance_availability.keys()) - set([name for cohort in best_gov_cohorts for name in cohort[2]])
 
-        if not alignment_availability and not governance_availability:
-            all_misc_cohorts = find_all_possible_cohorts(misc_availabilities, facilitators_info, min_size, max_size, time_block, possible_times)
-            best_misc_cohorts = select_best_cohorts(all_misc_cohorts, num_total_cohorts, min_size, facilitators_info)
-            not_selected_misc = set(misc_availabilities.keys()) - set([name for cohort in best_misc_cohorts for name in cohort[2]])
-            return {
-                'misc cohorts': best_misc_cohorts,
-                'not_selected_misc': not_selected_misc,
-                'not_available': not_available,
-            }
-        else:
             return {
                 'align cohorts': best_align_cohorts,
                 'gov cohorts': best_gov_cohorts,
                 'not_selected_align': not_selected_align,
                 'not_selected_gov': not_selected_gov,
                 'not assigned to alignment or governance': misc_availabilities.keys(),
+                'not_available': not_available,
+            }
+        else:
+            participants_availabilities = availabilities
+            all_cohorts = find_all_possible_cohorts(participants_availabilities, facilitators_info, min_size, max_size, time_block, possible_times)
+            best_cohorts = select_best_cohorts(all_cohorts, num_total_cohorts, min_size, facilitators_info)
+            not_selected = set(participants_availabilities.keys()) - set([name for cohort in best_cohorts for name in cohort[2]])
+            return {
+                'misc cohorts': best_cohorts,
+                'not_selected_misc': not_selected,
                 'not_available': not_available,
             }
 
@@ -357,16 +356,11 @@ if __name__ == "__main__":
     
     """
 
-    # File path to the JSON file containing the participant data
-    file_path = "Cohort-Formation-LettuceMeet/anonymized_file.json"
+    # File path to the JSON file containing the participant data from LettuceMeet (Instructions for generating this file can be found in the README)
+    participant_file_path = "Cohort-Formation-LettuceMeet/anonymized_file.json"
 
-    # File path to the JSON file containing the facilitator data
+    # File path to the JSON file containing the facilitator data from LettuceMeet (Instructions for generating this file can be found in the README)
     facilitator_file_path = "Cohort-Formation-LettuceMeet/facilitator_test.json"
-
-    # Number of alignment and governance cohorts to form. If you dont want to filter by course, the number of cohorts will be num_total_cohorts
-    num_align_cohorts = 4
-    num_gov_cohorts = 2
-    num_total_cohorts = 6
 
     # Minimum and maximum number of participants in a cohort
     min_size = 4
@@ -375,9 +369,12 @@ if __name__ == "__main__":
     # Meeting time block in hours
     time_block = 1.5
 
-    
-    # Enter the facilitator's capacity (number of cohorts) and course in the format facilitator_name: [capacity, course], with course being either "align" or "gov"
-    # (If you leave alignent_names and governance_names empty, the course assigned here will be ignored)
+    # Set to True if you want to filter by course, False otherwise. If True, modify the lists of alignment and governance applicants below. 
+    # If False, modify the number of total cohorts to form, under the variable num_total_cohorts.
+    filter_by_course = True
+
+    # Enter the facilitator's capacity (number of cohorts) and course in the format facilitator_name: [capacity, course], with course being either "align" or "gov". 
+    # If filter_by_course is set to False, the course choice will be ignored, so you can set it to anything.
     facilitator_capacity_course_entries = {
         'facilitator1': [1, "align"],
         'facilitator2': [2, "gov"],
@@ -386,22 +383,25 @@ if __name__ == "__main__":
     }
 
 
-    # Enter the names of the applicants who applied for alignment and governance. You can leave both lists empty
-    # if you dont want to filter by course, as such: alignment_names = [], governance_names = []
+    # If you set filter_by_course to True, modify the entries below.
+    num_align_cohorts = 4
+    num_gov_cohorts = 2
     alignment_names = ['Participant_9815', 'Participant_8903', 'Participant_4697', 'Participant_4252', 'Participant_1341', 
-                       'Participant_5185', 'Participant_1058', 'Participant_4268', 'Participant_3411', 'Participant_5607', 
-                       'Participant_3569', 'Participant_8043', 'Participant_3020', 'Participant_7441', 'Participant_8474', 
-                       'Participant_1885', 'Participant_3866', 'Participant_5060', 'Participant_2590', 'Participant_4674', 
-                       'Participant_7913', 'Participant_5398', 'Participant_6732', 'Participant_1212', 'Participant_7176', 'Participant_2122']
+                    'Participant_5185', 'Participant_1058', 'Participant_4268', 'Participant_3411', 'Participant_5607', 
+                    'Participant_3569', 'Participant_8043', 'Participant_3020', 'Participant_7441', 'Participant_8474', 
+                    'Participant_1885', 'Participant_3866', 'Participant_5060', 'Participant_2590', 'Participant_4674', 
+                    'Participant_7913', 'Participant_5398', 'Participant_6732', 'Participant_1212', 'Participant_7176', 'Participant_2122']
     governance_names = ['Participant_8148', 'Participant_6002', 'Participant_5263', 'Participant_8951', 'Participant_6396', 
-                        'Participant_8419', 'Participant_9931', 'Participant_9400', 'Participant_9497', 'Participant_9371', 
-                        'Participant_7496', 'Participant_6966']
+                            'Participant_8419', 'Participant_9931', 'Participant_9400', 'Participant_9497', 'Participant_9371', 
+                            'Participant_7496', 'Participant_6966']
 
-    # alignment_names = []
-    # governance_names = []
+    # If you set filter_by_course to False, modify the entry below.
+    num_total_cohorts = 6
 
+    
+    
     params = {
-        "file_path": file_path,
+        "participant_file_path": participant_file_path,
         "num_align_cohorts": num_align_cohorts,
         "num_gov_cohorts": num_gov_cohorts,
         "num_total_cohorts": num_total_cohorts,
@@ -412,6 +412,7 @@ if __name__ == "__main__":
         "facilitator_capacity_course_entries": facilitator_capacity_course_entries,
         "alignment_applicants": alignment_names,
         "governance_applicants": governance_names,
+        "filter_by_course": filter_by_course,
     }
 
     data = process_data(params)
