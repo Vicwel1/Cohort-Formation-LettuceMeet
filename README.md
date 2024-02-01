@@ -23,8 +23,9 @@ If you haven't already, make a separate LettuceMeet with entries for each of you
 ### Step 3: Generating cohorts
 There are two different ways to generate cohorts. 
 
-- **For homogeneous applications:** 
-If your LettuceMeet data contains applicants for only one course, use cohort_formation_GUI.py. This script requires no modifications; simply run it to open a user interface as shown below: 
+#### For homogeneous applications:
+  
+If your LettuceMeet data contains applicants for only one course, you can use cohort_formation_GUI.py. This script requires no modifications; simply run it to open a user interface as shown below: 
 
 <img width="40%" alt="windowgui" src="https://github.com/Vicwel1/Cohort-Formation-LettuceMeet/assets/124055472/2b1848f0-3778-41b4-9bc1-aa15da15b110">
 
@@ -33,8 +34,9 @@ Once all the fields are filled in, click "Generate cohorts" to execute the algor
 
 <img width="50%" alt="windowguiResults" src="https://github.com/Vicwel1/Cohort-Formation-LettuceMeet/assets/124055472/53020881-d1cf-49d2-9f24-360c7e0bd582">
 
-- **For varied applications:**
-If your LettuceMeet data contains applicants for both alignment and governance, use cohort_formation_noGUI.py. This script necessitates edits to specific lines at the bottom of the file, highlighted in the image below. Adjust these lines according to your needs before running the script.
+#### For varied applications:
+  
+If your LettuceMeet data contains applicants for both alignment and governance, use cohort_formation_noGUI.py. This script necessitates edits to specific lines at the bottom of the file, highlighted in the image below. Adjust these lines according to the specifics for your group.
 
 <img width="80%" alt="codeModify" src="https://github.com/Vicwel1/Cohort-Formation-LettuceMeet/assets/124055472/beeaad88-9a89-4979-8fc7-c3abbd20bb2d">
 
