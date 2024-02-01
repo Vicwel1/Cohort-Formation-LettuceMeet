@@ -2,7 +2,7 @@
 
 This repository facilitates the creation of cohorts from applicant availabilities submitted through LettuceMeet, specifically designed for groups organizing AI Safety Fundamentals courses in 2024 as part of the AI Safety Collab. However, with small modifications, it can be adapted for other programs or courses.
 
-With many applicants in a LettuceMeet form it can be quite a frustrating process to create cohorts, as you can't select more than a half-hour block at a time while displaying which applicants are available. This script is meant to make that process easier. I have tried to make it as easy to use as possible for people who are not very familiar with Python, and the steps are otlined below for guidance. If you run in to any issues, feel free to shoot me a message on slack at Victor Wellsmo. 
+With many applicants in a LettuceMeet form it can be quite a frustrating process to create cohorts, as you can't select more than a half-hour block at a time while displaying which applicants are available. This script is meant to make that process easier. I have tried to make it as easy to use as possible for people who are not very familiar with Python, and the steps are otlined below for guidance. If you run in to any issues, or have suggestions for improvements, feel free to shoot me a message on slack at Victor Wellsmo. 
 
 ### Step 1: Download respository
 At the top of this page, press the green "<> Code" button, and then "Download ZIP" in the dropdown menu. Unzip the files in your preferred directory.
