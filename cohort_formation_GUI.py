@@ -90,7 +90,7 @@ def run_analysis():
 
 # GUI setup
 app = tk.Tk()
-app.title("Cohort Analysis Tool")
+app.title("Cohort Generator Tool")
 
 # File upload buttons and labels
 load_button = tk.Button(app, text="Load Participant JSON File", command=load_file)
@@ -125,7 +125,7 @@ facilitator_frame = tk.Frame(app)
 facilitator_frame.pack()
 
 # Button to initiate analysis
-run_button = tk.Button(app, text="Run Analysis", command=run_analysis)
+run_button = tk.Button(app, text="Generate cohorts", command=run_analysis)
 run_button.pack()
 
 # Text box for displaying analysis results

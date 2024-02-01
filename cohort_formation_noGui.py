@@ -1,3 +1,5 @@
+# This file contains the code for the cohort formation algorithm with no GUI. You only need to modify the parameters at the bottom of the file.
+
 import json
 from datetime import datetime, timedelta
 from itertools import combinations
@@ -407,16 +409,20 @@ if __name__ == "__main__":
     # If you set filter_by_course to True, modify the entries below.
     num_align_cohorts = 4
     num_gov_cohorts = 2
+
+    # Names of the applicants who applied for alignment
     alignment_names = ['Participant_9815', 'Participant_8903', 'Participant_4697', 'Participant_4252', 'Participant_1341', 
                     'Participant_5185', 'Participant_1058', 'Participant_4268', 'Participant_3411', 'Participant_5607', 
                     'Participant_3569', 'Participant_8043', 'Participant_3020', 'Participant_7441', 'Participant_8474', 
                     'Participant_1885', 'Participant_3866', 'Participant_5060', 'Participant_2590', 'Participant_4674', 
                     'Participant_7913', 'Participant_5398', 'Participant_6732', 'Participant_1212', 'Participant_7176', 'Participant_2122']
+    
+    # Names of the applicants who applied for governance
     governance_names = ['Participant_8148', 'Participant_6002', 'Participant_5263', 'Participant_8951', 'Participant_6396', 
                             'Participant_8419', 'Participant_9931', 'Participant_9400', 'Participant_9497', 'Participant_9371', 
                             'Participant_7496', 'Participant_6966']
 
-    # If you set filter_by_course to False, modify the entry below.
+    # If you set filter_by_course to False, modify the toal number of cohorts below.
     num_total_cohorts = 6
 
     
