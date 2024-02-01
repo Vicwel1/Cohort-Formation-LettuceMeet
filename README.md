@@ -38,7 +38,7 @@ Once all the fields are filled in, click "Generate cohorts" to execute the algor
 
 #### For varied applications:
   
-If your LettuceMeet data contains applicants for both alignment and governance, use cohort_formation_noGUI.py. This script necessitates edits to specific lines at the bottom of the file, highlighted in the image below. Adjust these lines according to the specifics for your group.
+If your LettuceMeet data contains applicants for both alignment and governance, use cohort_formation_noGUI.py. This script necessitates edits to specific lines at the bottom of the file, highlighted in the image below. Adjust these lines according to the specifics for your group. It is important that the names in "alignment_names", "governance_names" and "facilitator_capacity_course_entries" matches the names in the LettuceMeet entries exactly, or the algorithm will not recognize it.
 
 <img width="80%" alt="codeModify" src="https://github.com/Vicwel1/Cohort-Formation-LettuceMeet/assets/124055472/beeaad88-9a89-4979-8fc7-c3abbd20bb2d">
 
