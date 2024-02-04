@@ -42,6 +42,6 @@ If your LettuceMeet data contains applicants for both alignment and governance, 
 
 <img width="80%" alt="codeModify" src="https://github.com/Vicwel1/Cohort-Formation-LettuceMeet/assets/124055472/beeaad88-9a89-4979-8fc7-c3abbd20bb2d">
 
-
+Once you have edited the required parameters, simply run the code and the result will be printed to the terminal.
 
 
